@@ -1,5 +1,18 @@
 import Foundation
 
+/// Everything known about an opened link at routing time.
+public struct RequestContext {
+    public let url: URL
+    public let sourceAppName: String?
+    public let sourceBundleID: String?
+
+    public init(url: URL, sourceAppName: String? = nil, sourceBundleID: String? = nil) {
+        self.url = url
+        self.sourceAppName = sourceAppName
+        self.sourceBundleID = sourceBundleID
+    }
+}
+
 public enum RuleMatcher {
     /// Domain match: URL host equals `domain` or is a subdomain of it. Case-insensitive.
     public static func domainMatches(_ domain: String, url: URL) -> Bool {
@@ -13,15 +26,46 @@ public enum RuleMatcher {
         return url.absoluteString.hasPrefix(prefix)
     }
 
-    /// Whether a rule matches a URL, based on its single populated matcher.
-    public static func matches(_ rule: Rule, url: URL) -> Bool {
-        if let domain = rule.domain {
-            return domainMatches(domain, url: url)
+    /// Regex match against the full URL string. Invalid patterns never match.
+    public static func regexMatches(_ pattern: String, url: URL) -> Bool {
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return false }
+        let s = url.absoluteString
+        return regex.firstMatch(in: s, range: NSRange(s.startIndex..., in: s)) != nil
+    }
+}
+
+extension Condition {
+    /// Whether this condition holds for the given request.
+    public func matches(_ ctx: RequestContext) -> Bool {
+        switch self {
+        case .domain(let v):
+            return RuleMatcher.domainMatches(v, url: ctx.url)
+        case .urlPrefix(let v):
+            return RuleMatcher.prefixMatches(v, url: ctx.url)
+        case .urlContains(let v):
+            return ctx.url.absoluteString.localizedCaseInsensitiveContains(v)
+        case .urlEquals(let v):
+            return ctx.url.absoluteString == v
+        case .urlRegex(let v):
+            return RuleMatcher.regexMatches(v, url: ctx.url)
+        case .sourceApp(let v):
+            if v.contains(".") {
+                return ctx.sourceBundleID?.caseInsensitiveCompare(v) == .orderedSame
+            }
+            return ctx.sourceAppName?.caseInsensitiveCompare(v) == .orderedSame
         }
-        if let prefix = rule.prefix {
-            return prefixMatches(prefix, url: url)
+    }
+}
+
+extension Rule {
+    /// Whether this rule matches the request, combining conditions per `match`.
+    public func matches(_ ctx: RequestContext) -> Bool {
+        switch match {
+        case .all:
+            return conditions.allSatisfy { $0.matches(ctx) }
+        case .any:
+            return conditions.contains { $0.matches(ctx) }
         }
-        return false
     }
 }
 
@@ -40,21 +84,21 @@ public struct Router {
         self.isInstalled = isInstalled
     }
 
-    /// The `browser` config value chosen for a URL: first matching rule, else default.
-    public func matchedBrowserValue(for url: URL) -> String {
-        for rule in config.rules where RuleMatcher.matches(rule, url: url) {
+    /// The `browser` config value chosen for a request: first matching rule, else default.
+    public func matchedBrowserValue(for ctx: RequestContext) -> String {
+        for rule in config.rules where rule.matches(ctx) {
             return rule.browser
         }
         return config.defaultBrowser
     }
 
-    /// Resolve the final target bundle id for a URL.
+    /// Resolve the final target bundle id for a request.
     ///
     /// Candidate chain: matched rule's browser -> config `default` -> Safari.
     /// Each candidate must resolve to a bundle id, be installed, and not equal `selfBundleID`.
-    public func resolveTargetBundleID(for url: URL) -> String? {
+    public func resolveTargetBundleID(for ctx: RequestContext) -> String? {
         let candidates = [
-            matchedBrowserValue(for: url),
+            matchedBrowserValue(for: ctx),
             config.defaultBrowser,
             BrowserResolver.safariBundleID,
         ]

@@ -24,16 +24,25 @@ public struct ConfigStore {
     # First matching rule wins, evaluated top to bottom.
     # `browser` accepts a friendly name (Safari, Firefox, Brave, Chrome, Edge, Arc)
     # or an explicit bundle id (any value containing a dot, e.g. com.brave.Browser).
+    #
+    # Simple rules use a single inline condition:
+    #   domain / prefix / url_contains / url_equals / url_regex / source_app
+    #
+    # Rich rules combine conditions with `match: all` or `match: any`.
+    # (The "Edit Rules…" menu bar item edits this file; hand-editing works too.)
 
     default: Brave
 
     rules:
-      # - domain: bitbucket.org          # matches the host or any subdomain
+      # - domain: bitbucket.org          # host or any subdomain -> Safari
       #   browser: Safari
-      # - domain: amazon.com
-      #   browser: Firefox
-      # - prefix: https://meet.google.com/   # matches a URL string prefix
+      # - prefix: https://meet.google.com/
       #   browser: Chrome
+      # - match: all                     # all conditions must hold
+      #   conditions:
+      #     - source_app: Mail           # link came from Mail
+      #     - url_contains: facebook
+      #   browser: Safari
     """
 
     /// Creates the config directory and default file if the file is missing.
@@ -57,5 +66,15 @@ public struct ConfigStore {
         try createIfMissing()
         let text = try String(contentsOf: fileURL, encoding: .utf8)
         return try ConfigLoader.parse(text)
+    }
+
+    /// Serializes and writes the config to disk (normalized; comments are not preserved).
+    public func save(_ config: Config) throws {
+        try FileManager.default.createDirectory(
+            at: fileURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        let text = try ConfigSerializer.dump(config)
+        try text.write(to: fileURL, atomically: true, encoding: .utf8)
     }
 }

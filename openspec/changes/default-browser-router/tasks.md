@@ -71,3 +71,16 @@
 - [x] 9.1 Add first-run onboarding: on first launch, if not already default, trigger the macOS set-default prompt (`DefaultBrowserPrompt`), guarded by a UserDefaults flag
 - [x] 9.2 Document Homebrew Cask distribution + notarization + headless first-run steps in README
 - [ ] 9.3 Set up Developer ID signing + notarization + a release cask (requires an Apple Developer account)
+
+## 10. Choosy-style rules + GUI editor
+
+- [x] 10.1 Engine: `Condition` (domain/prefix/contains/equals/regex/source_app), `Rule{match,conditions,browser}`, `MatchMode`, `RequestContext`
+- [x] 10.2 Evaluation: per-condition matching + All/Any; router takes `RequestContext`
+- [x] 10.3 Parse both legacy inline rules and new `match/conditions` schema; validate
+- [x] 10.4 `ConfigSerializer` (ordered Yams nodes) + `ConfigStore.save`
+- [x] 10.5 AppDelegate: extract source app from GetURL sender PID (frontmost fallback) → `RequestContext`
+- [x] 10.6 SwiftUI editor (`RulesEditorView` + view model), `RulesWindowController` (.regular↔.accessory), `InstalledBrowsers`
+- [x] 10.7 "Edit Rules…" menu item opens the editor
+- [x] 10.8 Tests: conditions, All/Any, source_app, legacy+new parse, invalid cases, YAML round-trip
+- [x] 10.9 Docs: README config schema + editor; default template comments; OpenSpec specs
+- [ ] 10.10 Manual: open editor, build a source_app+url_contains rule, Save, confirm YAML + routing from Mail

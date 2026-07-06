@@ -4,6 +4,7 @@ import AppKit
 /// Its presence is the "the router is running" indicator.
 final class StatusItemController: NSObject, NSMenuDelegate {
     private let statusItem: NSStatusItem
+    private let rulesWindow = RulesWindowController()
 
     override init() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -35,6 +36,14 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         menu.addItem(header)
 
         menu.addItem(NSMenuItem(
+            title: "Edit Rules…",
+            action: #selector(editRules),
+            keyEquivalent: ","
+        ).targeted(self))
+
+        menu.addItem(.separator())
+
+        menu.addItem(NSMenuItem(
             title: "About Default Browser Router",
             action: #selector(showAbout),
             keyEquivalent: ""
@@ -55,6 +64,10 @@ final class StatusItemController: NSObject, NSMenuDelegate {
             action: #selector(NSApplication.terminate(_:)),
             keyEquivalent: "q"
         ))
+    }
+
+    @objc private func editRules() {
+        rulesWindow.show()
     }
 
     @objc private func showAbout() {

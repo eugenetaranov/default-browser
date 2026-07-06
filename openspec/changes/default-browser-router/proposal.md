@@ -19,6 +19,7 @@ Different sites are best opened in different browsers (work SSO in Safari, shopp
 - `yaml-config`: Locate, create-on-first-run, load, and validate the YAML rules file into an in-memory routing table.
 - `url-routing`: Match an incoming URL against ordered domain/prefix rules and resolve the target browser, then launch the URL in it (with default fallback).
 - `menu-bar`: Show a menu bar status item as a running indicator, with About / Open at Login / Quit, and keep the app resident.
+- `rule-editor`: A visual editor (opened from the menu bar) for multi-condition All/Any rules, persisted to the YAML config.
 
 ### Modified Capabilities
 <!-- None: greenfield project with no existing specs. -->

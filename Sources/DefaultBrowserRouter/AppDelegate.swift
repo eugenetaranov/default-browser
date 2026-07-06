@@ -48,17 +48,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                          withReplyEvent reply: NSAppleEventDescriptor) {
         guard let string = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue,
               let url = URL(string: string) else { return }
-        route(url)
+        route(url, source: Self.sourceApplication(from: event))
     }
 
     /// AppKit also delivers opened files/URLs here; handle multiple independently.
     func application(_ application: NSApplication, open urls: [URL]) {
-        for url in urls { route(url) }
+        let source = NSWorkspace.shared.frontmostApplication
+        for url in urls { route(url, source: source) }
+    }
+
+    /// The app that sent the GetURL event, via its sender PID (`keySenderPIDAttr` = 'spid'),
+    /// falling back to the frontmost application.
+    private static func sourceApplication(from event: NSAppleEventDescriptor) -> NSRunningApplication? {
+        let keySenderPIDAttr = AEKeyword(0x73706964) // 'spid'
+        if let pidDesc = event.attributeDescriptor(forKeyword: keySenderPIDAttr) {
+            let pid = pidDesc.int32Value
+            if pid > 0, let app = NSRunningApplication(processIdentifier: pid) {
+                return app
+            }
+        }
+        return NSWorkspace.shared.frontmostApplication
     }
 
     // MARK: - Routing
 
-    private func route(_ url: URL) {
+    private func route(_ url: URL, source: NSRunningApplication?) {
+        let context = RequestContext(
+            url: url,
+            sourceAppName: source?.localizedName,
+            sourceBundleID: source?.bundleIdentifier
+        )
+        route(context)
+    }
+
+    private func route(_ context: RequestContext) {
+        let url = context.url
         // Reload config on every event so edits apply without restarting. Fail safe.
         let config: Config
         do {
@@ -75,7 +99,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             isInstalled: { BrowserLauncher.isInstalled(bundleID: $0) }
         )
 
-        guard let target = router.resolveTargetBundleID(for: url) else {
+        guard let target = router.resolveTargetBundleID(for: context) else {
             log("No installable target for \(url.absoluteString); using Safari.")
             openInSafari(url)
             return

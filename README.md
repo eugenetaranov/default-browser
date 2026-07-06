@@ -51,24 +51,36 @@ swift run RouterTests                     # routing/config test suite
 
 ## Configuration
 
-Config lives at `~/.config/default-browser-router/config.yaml` (created on first run):
+Edit rules from the menu bar → **Edit Rules…** (a visual editor), or hand-edit the YAML at
+`~/.config/default-browser-router/config.yaml` (created on first run). Both read/write the
+same file; the router reloads it on every click. Note: saving from the editor rewrites the
+file and drops comments.
 
 ```yaml
 # First matching rule wins, top to bottom.
 default: Brave
 
 rules:
-  - domain: bitbucket.org          # matches bitbucket.org and any subdomain
+  # Simple rule: a single inline condition.
+  - domain: bitbucket.org          # host or any subdomain
     browser: Safari
-  - domain: amazon.com
-    browser: Firefox
-  - prefix: https://meet.google.com/   # matches a URL string prefix
+  - prefix: https://meet.google.com/
     browser: Chrome
+
+  # Rich rule: combine conditions with match: all | any.
+  - match: all
+    conditions:
+      - source_app: Mail           # the app that opened the link
+      - url_contains: facebook
+    browser: Safari
 ```
 
-- `domain` matches the host or any subdomain (case-insensitive); `prefix` matches the start
-  of the full URL. Each rule has exactly one of the two.
-- `browser` (and `default`) accept a friendly name (`Safari`, `Firefox`, `Brave`, `Chrome`,
-  `Edge`, `Arc`, `Vivaldi`, `Opera`, `Chromium`) or an explicit bundle id (any value with a
-  dot, e.g. `com.brave.Browser`). Find one with `osascript -e 'id of app "Brave Browser"'`.
-- If a rule's browser isn't installed, it falls back to `default`, then Safari.
+**Conditions** (each is one key): `domain` (host/subdomain), `prefix` (URL starts with),
+`url_contains`, `url_equals`, `url_regex`, `source_app` (opening app by name, or bundle id
+if it contains a dot). A rule is either a single inline condition, or `match: all|any` over
+a `conditions:` list.
+
+**Browsers** — `browser` and `default` accept a friendly name (`Safari`, `Firefox`, `Brave`,
+`Chrome`, `Edge`, `Arc`, `Vivaldi`, `Opera`, `Chromium`) or an explicit bundle id (any value
+with a dot, e.g. `com.brave.Browser`). Find one with `osascript -e 'id of app "Brave Browser"'`.
+If a rule's browser isn't installed, it falls back to `default`, then Safari.
