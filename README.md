@@ -19,14 +19,14 @@ Requires macOS 13+.
 
 ```bash
 brew tap eugenetaranov/homebrew-tap
-brew install --cask --no-quarantine default-browser-router
+brew install --cask default-browser-router
 ```
 
-`--no-quarantine` is needed because the build is ad-hoc signed (not notarized).
-
-Then launch it once and make it your default browser:
+The build is ad-hoc signed (not notarized), so clear the download quarantine once, then
+launch it and make it your default browser:
 
 ```bash
+xattr -dr com.apple.quarantine "/Applications/DefaultBrowserRouter.app"
 open -a "Default Browser Router"
 ```
 
