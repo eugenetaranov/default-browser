@@ -19,6 +19,7 @@ Requires macOS 13+.
 
 ```bash
 brew tap eugenetaranov/homebrew-tap
+brew trust eugenetaranov/tap        # Homebrew requires trusting third-party taps
 brew install --cask default-browser-router
 ```
 
