@@ -36,7 +36,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         menu.addItem(header)
 
         menu.addItem(NSMenuItem(
-            title: "Edit Rules…",
+            title: "Edit Rules",
             action: #selector(editRules),
             keyEquivalent: ","
         ).targeted(self))
