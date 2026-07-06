@@ -28,7 +28,7 @@ launch it and make it your default browser:
 
 ```bash
 xattr -dr com.apple.quarantine "/Applications/DefaultBrowserRouter.app"
-open -a "Default Browser Router"
+open "/Applications/DefaultBrowserRouter.app"
 ```
 
 On first launch it shows a "make this your default browser?" prompt — accept it (or set it
@@ -39,7 +39,7 @@ manually in **System Settings → Desktop & Dock → Default web browser**).
 ```bash
 ./scripts/bundle.sh                       # build + assemble + ad-hoc codesign
 cp -R build/DefaultBrowserRouter.app /Applications/
-open -a "Default Browser Router"          # launch once, then set as default browser
+open "/Applications/DefaultBrowserRouter.app"   # launch once, then set as default browser
 ```
 
 Develop:
