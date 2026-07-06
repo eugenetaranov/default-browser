@@ -36,7 +36,7 @@ jobs:
           fetch-depth: 0
 
       - name: Build universal .app (ad-hoc signed)
-        run: ./scripts/bundle.sh --release --universal
+        run: ./scripts/bundle.sh --release --universal --version "${GITHUB_REF_NAME#v}"
 
       - name: Package zip + checksum
         id: pkg
