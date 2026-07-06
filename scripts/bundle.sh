@@ -37,13 +37,15 @@ swift build -c "$CONFIG" ${SWIFT_FLAGS[@]+"${SWIFT_FLAGS[@]}"}
 BIN_PATH="$(swift build -c "$CONFIG" ${SWIFT_FLAGS[@]+"${SWIFT_FLAGS[@]}"} --show-bin-path)/$APP_NAME"
 APP_DIR="$ROOT/build/$APP_NAME.app"
 MACOS_DIR="$APP_DIR/Contents/MacOS"
+RES_DIR="$APP_DIR/Contents/Resources"
 
 echo ">> Assembling ${APP_DIR}…"
 rm -rf "$APP_DIR"
-mkdir -p "$MACOS_DIR"
+mkdir -p "$MACOS_DIR" "$RES_DIR"
 cp "$ROOT/Resources/Info.plist" "$APP_DIR/Contents/Info.plist"
 cp "$BIN_PATH" "$MACOS_DIR/$APP_NAME"
 chmod +x "$MACOS_DIR/$APP_NAME"
+cp "$ROOT/Resources/AppIcon.icns" "$RES_DIR/AppIcon.icns"
 
 echo ">> Codesigning with identity: $SIGN_IDENTITY"
 codesign --force --sign "$SIGN_IDENTITY" --timestamp=none "$APP_DIR"
