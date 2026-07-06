@@ -4,10 +4,11 @@
 # register as a default web browser.
 #
 # Usage:
-#   scripts/bundle.sh [--release] [--sign "Developer ID Application: ..."] [--register]
+#   scripts/bundle.sh [--release] [--universal] [--sign "Developer ID ..."] [--register]
 #
-# Without --sign, an ad-hoc signature (-) is applied, which is enough for local
-# testing on the same machine.
+# --universal builds a fat arm64+x86_64 binary (for distribution).
+# Without --sign, an ad-hoc signature (-) is applied, which is enough to run and to
+# register as a default browser.
 
 set -euo pipefail
 
@@ -18,20 +19,22 @@ APP_NAME="DefaultBrowserRouter"
 CONFIG="debug"
 SIGN_IDENTITY="-"          # ad-hoc by default
 REGISTER=0
+SWIFT_FLAGS=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --release) CONFIG="release"; shift ;;
-    --sign)    SIGN_IDENTITY="$2"; shift 2 ;;
-    --register) REGISTER=1; shift ;;
+    --release)   CONFIG="release"; shift ;;
+    --universal) SWIFT_FLAGS+=(--arch arm64 --arch x86_64); shift ;;
+    --sign)      SIGN_IDENTITY="$2"; shift 2 ;;
+    --register)  REGISTER=1; shift ;;
     *) echo "Unknown arg: $1" >&2; exit 1 ;;
   esac
 done
 
 echo ">> Building ($CONFIG)…"
-swift build -c "$CONFIG"
+swift build -c "$CONFIG" ${SWIFT_FLAGS[@]+"${SWIFT_FLAGS[@]}"}
 
-BIN_PATH="$(swift build -c "$CONFIG" --show-bin-path)/$APP_NAME"
+BIN_PATH="$(swift build -c "$CONFIG" ${SWIFT_FLAGS[@]+"${SWIFT_FLAGS[@]}"} --show-bin-path)/$APP_NAME"
 APP_DIR="$ROOT/build/$APP_NAME.app"
 MACOS_DIR="$APP_DIR/Contents/MacOS"
 

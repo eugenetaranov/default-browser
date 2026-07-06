@@ -138,6 +138,37 @@ reinstall with `--no-quarantine`, right-click the app → **Open**, or clear qua
 xattr -dr com.apple.quarantine /Applications/DefaultBrowserRouter.app
 ```
 
+### Automated releases (GitHub Actions)
+
+Two workflows under `.github/workflows/`:
+
+- **`ci.yaml`** — on PRs to `main` and on `v*` tags: `swift build`, `swift run RouterTests`,
+  and an ad-hoc bundle smoke test (runs on `macos-14`).
+- **`release.yaml`** — on `v*` tags: waits for CI to pass, builds a **universal** (arm64 +
+  x86_64) ad-hoc-signed `.app`, zips it, creates a GitHub Release with the zip, and pushes
+  an updated cask to your Homebrew tap.
+
+To cut a release:
+
+```bash
+git tag v1.0 && git push origin v1.0
+```
+
+One-time setup:
+
+- Create a tap repo **`<owner>/homebrew-tap`** (public). The workflow writes
+  `Casks/default-browser-router.rb` into it.
+- Add a repo secret **`HOMEBREW_TAP_TOKEN`** — a PAT (or fine-grained token) with
+  `contents: write` on the tap repo. If the secret is absent, the tap step is skipped and
+  only the GitHub Release is published.
+
+Users then install with:
+
+```bash
+brew tap <owner>/homebrew-tap
+brew install --cask --no-quarantine default-browser-router
+```
+
 ## Set it as the default browser
 
 Either:
