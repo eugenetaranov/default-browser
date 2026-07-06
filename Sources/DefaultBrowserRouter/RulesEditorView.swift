@@ -79,11 +79,18 @@ final class EditableRule: Identifiable, ObservableObject {
     }
 }
 
+/// Transient result of the last save, driving the footer confirmation.
+enum SaveState: Equatable {
+    case idle
+    case saved
+    case failed(String)
+}
+
 /// View model bridging the editor to the on-disk YAML config.
 final class RulesViewModel: ObservableObject {
     @Published var defaultBrowser: String = "Brave"
     @Published var rules: [EditableRule] = []
-    @Published var status: String = ""
+    @Published var saveState: SaveState = .idle
 
     let browsers: [String]
     private let store: ConfigStore
@@ -103,7 +110,7 @@ final class RulesViewModel: ObservableObject {
                 browser: rule.browser
             )
         }
-        status = ""
+        saveState = .idle
     }
 
     func addRule() {
@@ -123,9 +130,9 @@ final class RulesViewModel: ObservableObject {
         )
         do {
             try store.save(config)
-            status = "Saved to \(store.fileURL.path)"
+            saveState = .saved
         } catch {
-            status = "Save failed: \(error)"
+            saveState = .failed("\(error)")
         }
     }
 
@@ -170,15 +177,41 @@ struct RulesEditorView: View {
             }
             Divider()
             HStack {
-                Text(model.status).font(.caption).foregroundColor(.secondary)
-                    .lineLimit(1).truncationMode(.middle)
+                saveConfirmation
                 Spacer()
                 Button("Save") { model.save() }
                     .keyboardShortcut("s", modifiers: .command)
             }
             .padding(12)
+            .animation(.spring(response: 0.35, dampingFraction: 0.6), value: model.saveState)
+            .onChange(of: model.saveState) { state in
+                guard state == .saved else { return }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
+                    if model.saveState == .saved {
+                        withAnimation(.easeInOut(duration: 0.35)) { model.saveState = .idle }
+                    }
+                }
+            }
         }
         .frame(minWidth: 560, minHeight: 420)
+    }
+
+    @ViewBuilder private var saveConfirmation: some View {
+        switch model.saveState {
+        case .saved:
+            Label("Saved", systemImage: "checkmark.circle.fill")
+                .font(.callout.weight(.medium))
+                .foregroundColor(.green)
+                .transition(.scale(scale: 0.6).combined(with: .opacity))
+        case .failed(let message):
+            Label(message, systemImage: "exclamationmark.triangle.fill")
+                .font(.caption)
+                .foregroundColor(.red)
+                .lineLimit(1)
+                .truncationMode(.middle)
+        case .idle:
+            EmptyView()
+        }
     }
 }
 
