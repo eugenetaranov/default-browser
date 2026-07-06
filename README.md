@@ -18,7 +18,7 @@ Requires macOS 13+.
 ## Install with Homebrew
 
 ```bash
-brew tap <owner>/homebrew-tap
+brew tap eugenetaranov/homebrew-tap
 brew install --cask --no-quarantine default-browser-router
 ```
 
