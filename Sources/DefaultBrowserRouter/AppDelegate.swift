@@ -21,6 +21,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private static let firstRunKey = "didCompleteFirstRun"
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Install the main menu so standard editing shortcuts (Cmd+A/C/V/X/Z) reach text
+        // fields in our windows. Without an Edit menu, AppKit never dispatches these.
+        MainMenu.install()
         // Show the menu bar indicator; the app now stays resident until Quit.
         statusItemController = StatusItemController()
         // Launch-at-login: register once so the indicator is present from startup.
