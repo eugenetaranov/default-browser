@@ -4,6 +4,8 @@ A tiny, native macOS app that registers as your **default web browser** and rout
 opened link to a different browser based on a simple YAML config — like Choosy, but
 minimal, headless, and free.
 
+![The visual rules editor](docs/screenshot.png)
+
 ## How it works
 
 macOS sends every clicked `http`/`https` link to the one app set as the default browser.
